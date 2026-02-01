@@ -34,6 +34,7 @@
         display: grid;
         grid-template-columns: 360px 1fr;
         height: 100vh;
+        height: 100dvh; /* iOS/modern mobile: stable viewport height */
         gap: 14px;
         padding: 14px;
         box-sizing: border-box;
@@ -173,7 +174,7 @@
           grid-template-rows: auto 1fr;
         }
         #cy {
-          min-height: 0;
+          min-height: 240px; /* ensure graph is visible on small screens */
         }
       }
     </style>
@@ -516,6 +517,26 @@ c[14] = c[12] | c[13];
       // Graph rendering
       // ---------------------------
       let cy = null;
+
+      function kickCyLayout() {
+        try {
+          if (!cy) return;
+          // Resize in two phases to handle mobile viewport + iframe show timing.
+          requestAnimationFrame(() => {
+            try {
+              cy.resize();
+              cy.fit(undefined, 30);
+            } catch {}
+          });
+          setTimeout(() => {
+            try {
+              cy.resize();
+              cy.fit(undefined, 30);
+            } catch {}
+          }, 120);
+        } catch {}
+      }
+
       function initCy() {
         if (cy) return;
         cy = cytoscape({
@@ -990,6 +1011,25 @@ c[14] = c[12] | c[13];
         render();
       });
 
+      // If this page is embedded in a tab/iframe, the parent can tell us when it becomes visible.
+      window.addEventListener("message", (event) => {
+        try {
+          if (event?.data?.type === "IONQ_PARENT_SHOWN") kickCyLayout();
+        } catch {}
+      });
+
+      // Mobile browsers frequently change viewport size when URL bars collapse/expand.
+      let _resizeT = null;
+      const scheduleKick = () => {
+        clearTimeout(_resizeT);
+        _resizeT = setTimeout(() => {
+          kickCyLayout();
+        }, 80);
+      };
+      window.addEventListener("resize", scheduleKick, { passive: true });
+      window.addEventListener("orientationchange", scheduleKick, { passive: true });
+      document.addEventListener("visibilitychange", scheduleKick);
+
       // Boot
       (async () => {
         loadLocal();
@@ -1006,6 +1046,7 @@ c[14] = c[12] | c[13];
           // Always render the public graph view (even before login),
           // so users can explore the map immediately.
           render();
+          kickCyLayout();
           if (state.apiToken && state.playerId) {
             setLog("Restoring session…");
             $("btnLogout").disabled = false;

@@ -3,21 +3,31 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>iQHack Submission</title>
-    <meta http-equiv="refresh" content="0; url=site.html" />
+    <title>Redirecting…</title>
+    <meta http-equiv="refresh" content="0; url=iQuhackweb.html" />
     <style>
       body {
         font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
         margin: 0;
         padding: 24px;
+        background: #0b1020;
+        color: rgba(255, 255, 255, 0.9);
       }
-      a { color: #2563eb; }
+      a {
+        color: #93c5fd;
+      }
     </style>
   </head>
   <body>
-    <p>Redirecting to <a href="site.html">site.html</a>…</p>
+    <p>Redirecting to <a href="iQuhackweb.html">iQuhackweb.html</a>…</p>
+    <noscript>
+      <p>JavaScript is disabled. Click <a href="iQuhackweb.html">here</a>.</p>
+    </noscript>
     <script>
-      window.location.replace("site.html");
+      // Preserve hashes like #game for deep-linking the tab
+      const dest = "iQuhackweb.html" + (window.location.hash || "");
+      window.location.replace(dest);
     </script>
   </body>
 </html>
+

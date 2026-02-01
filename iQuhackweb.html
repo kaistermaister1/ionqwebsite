@@ -94,6 +94,30 @@
 
 <body class="antialiased selection:bg-indigo-500/30 flex flex-col h-screen p-4 md:p-6 overflow-hidden">
 
+  <!-- Top-right tabs -->
+  <div class="fixed top-4 right-4 z-50">
+    <div class="inline-flex items-center gap-1 rounded-full border border-white/10 bg-black/30 backdrop-blur px-1 py-1 shadow-sm">
+      <button
+        id="tabBtnSite"
+        type="button"
+        class="rounded-full px-3 py-1.5 text-xs font-mono font-bold tracking-wide border border-white/10 bg-white/10 text-white hover:bg-white/15"
+        aria-pressed="true"
+      >
+        Website
+      </button>
+      <button
+        id="tabBtnGame"
+        type="button"
+        class="rounded-full px-3 py-1.5 text-xs font-mono font-bold tracking-wide border border-transparent text-slate-300 hover:bg-white/10 hover:text-white"
+        aria-pressed="false"
+      >
+        Play Game
+      </button>
+    </div>
+  </div>
+
+  <!-- Website tab -->
+  <div id="tabPanelSite" class="flex flex-col flex-1 min-h-0">
   <!-- Compact Header -->
   <header class="mb-6 flex-shrink-0">
     <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 border-b border-white/10 pb-4">
@@ -374,5 +398,74 @@
     </div>
 
   </main>
+</div>
+
+  <!-- Game tab (full-screen overlay) -->
+  <div id="tabPanelGame" class="hidden fixed inset-0 z-40 p-3 md:p-4">
+    <div class="w-full h-full rounded-2xl overflow-hidden border border-white/10 bg-black/30 backdrop-blur">
+      <iframe
+        id="gameFrame"
+        title="Entanglement Distillation Game"
+        src="about:blank"
+        data-src="web_client.html"
+        class="w-full h-full"
+        style="border: 0"
+      ></iframe>
+    </div>
+  </div>
+
+  <script>
+    const tabBtnSite = document.getElementById("tabBtnSite");
+    const tabBtnGame = document.getElementById("tabBtnGame");
+    const tabPanelSite = document.getElementById("tabPanelSite");
+    const tabPanelGame = document.getElementById("tabPanelGame");
+    const gameFrame = document.getElementById("gameFrame");
+
+    function setActiveTab(tab) {
+      const isGame = tab === "game";
+
+      tabPanelSite.classList.toggle("hidden", isGame);
+      tabPanelGame.classList.toggle("hidden", !isGame);
+
+      // Lazy-load the game only when the tab is opened.
+      // This avoids Cytoscape initializing with a 0px container on mobile.
+      if (isGame && gameFrame) {
+        const desired = gameFrame.getAttribute("data-src") || "web_client.html";
+        const current = gameFrame.getAttribute("src") || "";
+        if (!current || current === "about:blank") gameFrame.setAttribute("src", desired);
+        // Once visible, ask the iframe to resize/fit the graph.
+        setTimeout(() => {
+          try {
+            gameFrame.contentWindow?.postMessage({ type: "IONQ_PARENT_SHOWN" }, "*");
+          } catch {}
+        }, 120);
+      }
+
+      tabBtnSite.setAttribute("aria-pressed", String(!isGame));
+      tabBtnGame.setAttribute("aria-pressed", String(isGame));
+
+      tabBtnSite.className =
+        "rounded-full px-3 py-1.5 text-xs font-mono font-bold tracking-wide border " +
+        (!isGame
+          ? "border-white/10 bg-white/10 text-white hover:bg-white/15"
+          : "border-transparent text-slate-300 hover:bg-white/10 hover:text-white");
+
+      tabBtnGame.className =
+        "rounded-full px-3 py-1.5 text-xs font-mono font-bold tracking-wide border " +
+        (isGame
+          ? "border-white/10 bg-white/10 text-white hover:bg-white/15"
+          : "border-transparent text-slate-300 hover:bg-white/10 hover:text-white");
+
+      const nextHash = isGame ? "#game" : "#site";
+      if (window.location.hash !== nextHash) window.location.hash = nextHash;
+    }
+
+    tabBtnSite.addEventListener("click", () => setActiveTab("site"));
+    tabBtnGame.addEventListener("click", () => setActiveTab("game"));
+
+    // Boot: honor the hash if present
+    if (window.location.hash === "#game") setActiveTab("game");
+    else setActiveTab("site");
+  </script>
 </body>
 </html>
