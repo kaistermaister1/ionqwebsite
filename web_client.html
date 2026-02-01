@@ -171,7 +171,14 @@
       @media (max-width: 980px) {
         .app {
           grid-template-columns: 1fr;
-          grid-template-rows: auto 1fr;
+          /* Prevent the sidebar from pushing the map off-screen on mobile.
+             Keep the sidebar scrollable and always reserve space for the graph. */
+          grid-template-rows: minmax(0, 44dvh) minmax(0, 1fr);
+        }
+        .sidebar {
+          max-height: 44dvh;
+          overflow: auto;
+          -webkit-overflow-scrolling: touch;
         }
         #cy {
           min-height: 240px; /* ensure graph is visible on small screens */
